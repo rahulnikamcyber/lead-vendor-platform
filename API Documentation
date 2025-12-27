@@ -1,0 +1,597 @@
+# 📚 API Documentation - Lead-Vendor Platform
+
+Base URL: `http://localhost:8000`
+
+Interactive Docs: `http://localhost:8000/docs`
+
+---
+
+## 🔓 Public Endpoints (No Authentication)
+
+### 1. Submit Lead
+**POST** `/api/leads/`
+
+Create a new customer lead. The system automatically generates a unique lead ID and routes to matching vendors.
+
+**Request Body:**
+```json
+{
+  "full_name": "John Doe",
+  "mobile": "9876543210",
+  "city": "Surat",
+  "service_type": "Solar",
+  "budget_range": "1L-2L",
+  "notes": "Need solar panels for 3BHK home"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Lead submitted successfully",
+  "lead_id": "LD-SOLAR-SURAT-27202512-001",
+  "is_duplicate": false,
+  "vendors_notified": 3
+}
+```
+
+**Lead ID Format:** `LD-{SERVICE}-{CITY}-{DDYYYYMM}-{SEQ}`
+
+---
+
+### 2. Vendor Registration
+**POST** `/api/vendors/register`
+
+Register a new vendor account. Account starts as INACTIVE with 0 credits.
+
+**Request Body:**
+```json
+{
+  "company_name": "Solar Solutions Surat",
+  "owner_name": "Amit Patel",
+  "mobile": "9876543210",
+  "email": "vendor@example.com",
+  "city": "Surat",
+  "service_type": "Solar",
+  "password": "SecurePass123"
+}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "vendor_id": "VD-SOLAR-SURAT-001",
+  "company_name": "Solar Solutions Surat",
+  "owner_name": "Amit Patel",
+  "mobile": "9876543210",
+  "email": "vendor@example.com",
+  "city": "Surat",
+  "service_type": "Solar",
+  "status": "inactive",
+  "credits": 0,
+  "total_leads_received": 0,
+  "created_at": "2024-12-27T10:30:00"
+}
+```
+
+**Vendor ID Format:** `VD-{SERVICE}-{CITY}-{SEQ}`
+
+---
+
+### 3. Login
+**POST** `/api/auth/login`
+
+Authenticate user and get JWT token. Works for both admin and vendor accounts.
+
+**Request Body (form-data):**
+```
+username: admin@example.com
+password: Admin@123
+```
+
+**Response:**
+```json
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "token_type": "bearer"
+}
+```
+
+**Usage:**
+Include token in subsequent requests:
+```
+Authorization: Bearer {access_token}
+```
+
+---
+
+## 🔐 Vendor Endpoints (Requires Authentication)
+
+### 4. Get Vendor Profile
+**GET** `/api/vendors/me`
+
+Get current vendor's profile information.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "vendor_id": "VD-SOLAR-SURAT-001",
+  "company_name": "Solar Solutions Surat",
+  "owner_name": "Amit Patel",
+  "mobile": "9876543210",
+  "email": "vendor@example.com",
+  "city": "Surat",
+  "service_type": "Solar",
+  "status": "active",
+  "credits": 25,
+  "total_leads_received": 15,
+  "created_at": "2024-12-27T10:30:00"
+}
+```
+
+---
+
+### 5. Get Vendor Leads
+**GET** `/api/vendors/my-leads`
+
+Get all leads assigned to current vendor. Each lead shows vendor-specific ID (Lead #001, #002, etc.)
+
+**Query Parameters:**
+- `skip` (optional): Number of records to skip (default: 0)
+- `limit` (optional): Maximum records to return (default: 50)
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+{
+  "total": 15,
+  "leads": [
+    {
+      "vendor_lead_id": "Lead #001",
+      "vendor_lead_number": 1,
+      "customer_name": "John Doe",
+      "mobile": "9876543210",
+      "city": "Surat",
+      "service_type": "Solar",
+      "budget_range": "1L-2L",
+      "notes": "Need solar panels for 3BHK home",
+      "assigned_at": "2024-12-27T10:45:00"
+    },
+    {
+      "vendor_lead_id": "Lead #002",
+      "vendor_lead_number": 2,
+      "customer_name": "Jane Smith",
+      "mobile": "9876543211",
+      "city": "Surat",
+      "service_type": "Solar",
+      "budget_range": "2L-5L",
+      "notes": "Commercial solar installation",
+      "assigned_at": "2024-12-27T11:30:00"
+    }
+  ]
+}
+```
+
+**Note:** Vendor cannot see system lead IDs (LD-SOLAR-SURAT-27202512-001). They only see sequential numbers.
+
+---
+
+### 6. Purchase Credits
+**POST** `/api/vendors/buy-credits`
+
+Create a payment link for purchasing lead credits.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Request Body:**
+```json
+{
+  "credits": 50
+}
+```
+
+**Response:**
+```json
+{
+  "payment_id": "PAY-20241227103000",
+  "amount": 5000.0,
+  "credits_purchased": 50,
+  "payment_link": "https://razorpay.me/l/xyz123",
+  "status": "pending"
+}
+```
+
+**Credit Pricing:** 1 Credit = ₹100 (configurable in `.env`)
+
+**Flow:**
+1. Vendor calls this endpoint
+2. Opens payment_link in browser
+3. Completes payment
+4. Webhook updates credits automatically
+5. Vendor account activated if credits > 0
+
+---
+
+### 7. Payment History
+**GET** `/api/vendors/payments`
+
+Get payment transaction history for current vendor.
+
+**Headers:**
+```
+Authorization: Bearer {token}
+```
+
+**Response:**
+```json
+[
+  {
+    "payment_id": "PAY-20241227103000",
+    "amount": 5000.0,
+    "credits_purchased": 50,
+    "status": "success",
+    "invoice_number": "INV-VD-SOLAR-SURAT-001-2024-0001",
+    "created_at": "2024-12-27T10:30:00",
+    "completed_at": "2024-12-27T10:32:15"
+  }
+]
+```
+
+---
+
+## 👑 Admin Endpoints (Requires Admin Role)
+
+### 8. Admin Dashboard Stats
+**GET** `/api/admin/dashboard`
+
+Get comprehensive dashboard statistics.
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Response:**
+```json
+{
+  "leads": {
+    "total": 450,
+    "today": 25,
+    "week": 180,
+    "month": 350,
+    "duplicates": 12
+  },
+  "vendors": {
+    "total": 45,
+    "active": 32,
+    "inactive": 13
+  },
+  "revenue": {
+    "total": 125000.0,
+    "month": 45000.0
+  },
+  "leads_by_city": [
+    {"city": "Surat", "count": 120},
+    {"city": "Ahmedabad", "count": 95},
+    {"city": "Vadodara", "count": 78}
+  ],
+  "leads_by_service": [
+    {"service": "Solar", "count": 150},
+    {"service": "Electrical", "count": 120},
+    {"service": "Plumbing", "count": 90}
+  ]
+}
+```
+
+---
+
+### 9. Get All Vendors
+**GET** `/api/admin/vendors`
+
+Get list of all vendors with filters.
+
+**Query Parameters:**
+- `skip` (optional): Pagination offset
+- `limit` (optional): Results per page
+- `status` (optional): Filter by status (active/inactive/suspended)
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Response:**
+```json
+{
+  "total": 45,
+  "vendors": [
+    {
+      "id": 1,
+      "vendor_id": "VD-SOLAR-SURAT-001",
+      "company_name": "Solar Solutions Surat",
+      "owner_name": "Amit Patel",
+      "email": "vendor@example.com",
+      "city": "Surat",
+      "service_type": "Solar",
+      "status": "active",
+      "credits": 25,
+      "total_leads_received": 15,
+      "created_at": "2024-12-27T10:30:00"
+    }
+  ]
+}
+```
+
+---
+
+### 10. Update Vendor Credits
+**PUT** `/api/admin/vendors/{vendor_id}/credits`
+
+Manually add or remove credits from a vendor account.
+
+**Path Parameters:**
+- `vendor_id`: Vendor database ID (not vendor_id string)
+
+**Query Parameters:**
+- `credits`: Number of credits to add (can be negative to deduct)
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Example:**
+```
+PUT /api/admin/vendors/1/credits?credits=50
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "vendor_id": "VD-SOLAR-SURAT-001",
+  "new_credits": 75
+}
+```
+
+---
+
+### 11. Lead Assignment Logs
+**GET** `/api/admin/lead-assignments`
+
+View complete log of lead routing to vendors.
+
+**Query Parameters:**
+- `skip` (optional): Pagination offset
+- `limit` (optional): Results per page
+
+**Headers:**
+```
+Authorization: Bearer {admin_token}
+```
+
+**Response:**
+```json
+{
+  "total": 450,
+  "assignments": [
+    {
+      "id": 1,
+      "system_lead_id": "LD-SOLAR-SURAT-27202512-001",
+      "vendor_id": "VD-SOLAR-SURAT-001",
+      "vendor_company": "Solar Solutions Surat",
+      "vendor_lead_id": "Lead #001",
+      "credits_deducted": 1,
+      "is_delivered": true,
+      "assigned_at": "2024-12-27T10:45:00"
+    }
+  ]
+}
+```
+
+---
+
+## 🔗 Webhook Endpoints
+
+### 12. Razorpay Webhook
+**POST** `/api/webhooks/razorpay`
+
+Receives payment verification from Razorpay.
+
+**Headers:**
+```
+X-Razorpay-Signature: {signature}
+```
+
+**Request Body:**
+```json
+{
+  "event": "payment.captured",
+  "payload": {
+    "payment": {
+      "entity": {
+        "id": "pay_xyz123",
+        "order_id": "order_abc456",
+        "amount": 500000,
+        "status": "captured"
+      }
+    }
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "status": "ok"
+}
+```
+
+**Flow:**
+1. User completes payment on Razorpay
+2. Razorpay sends webhook
+3. System verifies signature
+4. Credits added to vendor
+5. Vendor activated
+6. Invoice generated
+
+---
+
+### 13. Payment Callback (Demo Mode)
+**GET** `/api/webhooks/payment`
+
+Manual payment verification for demo/testing.
+
+**Query Parameters:**
+- `payment_id`: Payment ID from system
+- `razorpay_payment_id` (optional): Razorpay payment ID
+- `razorpay_signature` (optional): Payment signature
+
+**Example:**
+```
+GET /api/webhooks/payment?payment_id=PAY-20241227103000
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Payment successful",
+  "payment_id": "PAY-20241227103000",
+  "credits_added": 50
+}
+```
+
+---
+
+## 📊 Response Status Codes
+
+| Code | Meaning |
+|------|---------|
+| 200 | Success |
+| 201 | Created |
+| 400 | Bad Request (validation error) |
+| 401 | Unauthorized (invalid/missing token) |
+| 403 | Forbidden (insufficient permissions) |
+| 404 | Not Found |
+| 422 | Unprocessable Entity (validation error) |
+| 500 | Internal Server Error |
+
+---
+
+## 🧪 Testing with cURL
+
+### Submit Lead
+```bash
+curl -X POST http://localhost:8000/api/leads/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "full_name": "John Doe",
+    "mobile": "9876543210",
+    "city": "Surat",
+    "service_type": "Solar",
+    "budget_range": "1L-2L"
+  }'
+```
+
+### Login
+```bash
+curl -X POST http://localhost:8000/api/auth/login \
+  -F "username=admin@example.com" \
+  -F "password=Admin@123"
+```
+
+### Get Vendor Profile
+```bash
+curl -X GET http://localhost:8000/api/vendors/me \
+  -H "Authorization: Bearer {your_token}"
+```
+
+### Get Dashboard Stats (Admin)
+```bash
+curl -X GET http://localhost:8000/api/admin/dashboard \
+  -H "Authorization: Bearer {admin_token}"
+```
+
+---
+
+## 🔒 Authentication Flow
+
+### For Vendors:
+1. Register via `/api/vendors/register`
+2. Login via `/api/auth/login` to get token
+3. Use token in `Authorization: Bearer {token}` header
+4. Token expires in 7 days (configurable)
+
+### For Admin:
+1. Use default credentials (set in `.env`)
+2. Login via `/api/auth/login`
+3. Receive token with admin role
+4. Access admin-only endpoints
+
+---
+
+## 🎯 Common Use Cases
+
+### Case 1: Customer Submits Lead
+```
+1. POST /api/leads/ (with lead data)
+2. System generates LD-SOLAR-SURAT-27202512-001
+3. System finds matching vendors (city + service + active + credits > 0)
+4. System creates assignments with vendor-specific IDs
+5. System sends notifications
+6. System deducts 1 credit per vendor
+```
+
+### Case 2: Vendor Purchases Credits
+```
+1. POST /api/vendors/buy-credits (credits: 50)
+2. System creates payment record
+3. System generates Razorpay payment link
+4. Vendor completes payment
+5. Razorpay sends webhook
+6. System verifies payment
+7. System adds 50 credits
+8. System activates vendor
+9. System generates invoice
+```
+
+### Case 3: Admin Monitors System
+```
+1. GET /api/admin/dashboard (get overview)
+2. GET /api/admin/vendors (view all vendors)
+3. PUT /api/admin/vendors/1/credits?credits=10 (add credits)
+4. GET /api/admin/lead-assignments (view routing logs)
+```
+
+---
+
+## 📝 Notes
+
+- All dates are system-generated (UTC)
+- All IDs are automatically generated
+- Duplicate detection uses name + mobile combination
+- 1 Credit = 1 Lead = ₹100 (configurable)
+- Vendors see sequential lead numbers only
+- System maintains internal lead IDs for tracking
+- Email notifications sent for each lead assignment
+- Payment webhook verifies and updates credits automatically
+
+---
+
+**Full Interactive Documentation:** http://localhost:8000/docs
