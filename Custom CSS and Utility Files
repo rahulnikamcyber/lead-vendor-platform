@@ -1,0 +1,340 @@
+/* ============================================ */
+/* frontend/static/css/custom.css */
+/* ============================================ */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Focus styles */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+    outline: none;
+}
+
+/* Loading spinner */
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #3498db;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+}
+
+/* Card hover effects */
+.hover-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+/* Status badges */
+.status-active {
+    background-color: #10b981;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-inactive {
+    background-color: #6b7280;
+    color: white;
+    padding: 4px 12px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+    table {
+        font-size: 0.875rem;
+    }
+    
+    th, td {
+        padding: 8px 4px !important;
+    }
+}
+
+/* Print styles */
+@media print {
+    .no-print {
+        display: none;
+    }
+}
+
+
+/* ============================================ */
+/* backend/app/utils/pdf_generator.py */
+/* ============================================ */
+
+"""
+from reportlab.lib.pagesizes import letter, A4
+from reportlab.lib.units import inch
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from datetime import datetime
+import io
+
+def generate_invoice_pdf(payment, vendor):
+    '''Generate PDF invoice for payment'''
+    
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+    
+    # Header
+    c.setFont("Helvetica-Bold", 24)
+    c.drawString(50, height - 50, "INVOICE")
+    
+    # Invoice details
+    c.setFont("Helvetica", 10)
+    y = height - 100
+    
+    c.drawString(50, y, f"Invoice Number: {payment.invoice_number}")
+    y -= 20
+    c.drawString(50, y, f"Date: {payment.completed_at.strftime('%d %B %Y')}")
+    y -= 20
+    c.drawString(50, y, f"Payment ID: {payment.payment_id}")
+    
+    # Vendor details
+    y -= 40
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(50, y, "Bill To:")
+    c.setFont("Helvetica", 10)
+    y -= 20
+    c.drawString(50, y, vendor.company_name)
+    y -= 15
+    c.drawString(50, y, vendor.owner_name)
+    y -= 15
+    c.drawString(50, y, f"Vendor ID: {vendor.vendor_id}")
+    y -= 15
+    c.drawString(50, y, vendor.email)
+    y -= 15
+    c.drawString(50, y, vendor.mobile)
+    
+    # Line items table
+    y -= 40
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(50, y, "Description")
+    c.drawString(300, y, "Quantity")
+    c.drawString(400, y, "Price")
+    c.drawString(500, y, "Amount")
+    
+    y -= 5
+    c.line(50, y, width - 50, y)
+    
+    y -= 20
+    c.setFont("Helvetica", 10)
+    c.drawString(50, y, "Lead Credits")
+    c.drawString(300, y, str(payment.credits_purchased))
+    c.drawString(400, y, f"₹{payment.amount / payment.credits_purchased:.2f}")
+    c.drawString(500, y, f"₹{payment.amount:.2f}")
+    
+    # Total
+    y -= 30
+    c.line(400, y, width - 50, y)
+    y -= 20
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(400, y, "Total:")
+    c.drawString(500, y, f"₹{payment.amount:.2f}")
+    
+    # Footer
+    c.setFont("Helvetica", 8)
+    c.drawString(50, 50, "Thank you for your business!")
+    c.drawString(50, 35, "Lead Vendor Platform | support@leadvendor.com")
+    
+    c.save()
+    buffer.seek(0)
+    return buffer
+
+
+def save_invoice(payment, vendor, filepath):
+    '''Save invoice to file'''
+    buffer = generate_invoice_pdf(payment, vendor)
+    
+    with open(filepath, 'wb') as f:
+        f.write(buffer.read())
+    
+    return filepath
+"""
+
+
+/* ============================================ */
+/* backend/app/utils/validators.py */
+/* ============================================ */
+
+"""
+import re
+import phonenumbers
+
+def validate_email(email: str) -> bool:
+    '''Validate email format'''
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def validate_mobile(mobile: str, country: str = 'IN') -> bool:
+    '''Validate mobile number'''
+    try:
+        phone = phonenumbers.parse(mobile, country)
+        return phonenumbers.is_valid_number(phone)
+    except:
+        return False
+
+def validate_password(password: str) -> tuple[bool, str]:
+    '''
+    Validate password strength
+    Returns: (is_valid, error_message)
+    '''
+    if len(password) < 6:
+        return False, "Password must be at least 6 characters"
+    
+    if not re.search(r'[A-Za-z]', password):
+        return False, "Password must contain letters"
+    
+    if not re.search(r'[0-9]', password):
+        return False, "Password must contain numbers"
+    
+    return True, ""
+
+def sanitize_string(text: str) -> str:
+    '''Sanitize user input'''
+    # Remove extra whitespace
+    text = ' '.join(text.split())
+    
+    # Remove special characters that could be harmful
+    text = re.sub(r'[<>\"\'\\]', '', text)
+    
+    return text.strip()
+"""
+
+
+/* ============================================ */
+/* backend/app/tasks/scheduler.py */
+/* ============================================ */
+
+"""
+from apscheduler.schedulers.background import BackgroundScheduler
+from sqlalchemy import and_
+from datetime import datetime, timedelta
+from ..database import SessionLocal
+from ..models.vendor import Vendor, VendorStatus
+from ..models.lead import Lead
+from ..models.payment import Payment, PaymentStatus
+
+scheduler = BackgroundScheduler()
+
+def cleanup_old_data():
+    '''Cleanup old data (optional task)'''
+    db = SessionLocal()
+    try:
+        # Archive old leads (older than 6 months)
+        six_months_ago = datetime.utcnow() - timedelta(days=180)
+        old_leads = db.query(Lead).filter(
+            Lead.created_at < six_months_ago
+        ).count()
+        
+        print(f"Found {old_leads} old leads to archive")
+        
+        # Add archival logic here
+        
+    finally:
+        db.close()
+
+def send_low_credit_alerts():
+    '''Send alerts to vendors with low credits'''
+    db = SessionLocal()
+    try:
+        vendors = db.query(Vendor).filter(
+            and_(
+                Vendor.status == VendorStatus.ACTIVE,
+                Vendor.credits <= 5,
+                Vendor.credits > 0
+            )
+        ).all()
+        
+        for vendor in vendors:
+            print(f"Low credit alert for {vendor.vendor_id}: {vendor.credits} credits remaining")
+            # Send email/SMS notification
+            
+    finally:
+        db.close()
+
+def generate_daily_reports():
+    '''Generate daily summary reports'''
+    db = SessionLocal()
+    try:
+        today = datetime.utcnow().date()
+        
+        # Count today's leads
+        leads_today = db.query(Lead).filter(
+            Lead.created_at >= datetime.combine(today, datetime.min.time())
+        ).count()
+        
+        # Count today's revenue
+        revenue_today = db.query(Payment).filter(
+            and_(
+                Payment.status == PaymentStatus.SUCCESS,
+                Payment.completed_at >= datetime.combine(today, datetime.min.time())
+            )
+        ).count()
+        
+        print(f"Daily Report: {leads_today} leads, {revenue_today} payments")
+        
+    finally:
+        db.close()
+
+def start_scheduler():
+    '''Start background scheduler'''
+    
+    # Run daily at 9 AM
+    scheduler.add_job(generate_daily_reports, 'cron', hour=9, minute=0)
+    
+    # Run every hour
+    scheduler.add_job(send_low_credit_alerts, 'interval', hours=1)
+    
+    # Run weekly on Sunday at midnight
+    scheduler.add_job(cleanup_old_data, 'cron', day_of_week='sun', hour=0, minute=0)
+    
+    scheduler.start()
+    print("✅ Background scheduler started")
+
+def stop_scheduler():
+    '''Stop background scheduler'''
+    scheduler.shutdown()
+    print("⏹️ Background scheduler stopped")
+"""
