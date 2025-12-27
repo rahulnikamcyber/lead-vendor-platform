@@ -1,0 +1,107 @@
+<!-- templates/admin_dashboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <!-- Mobile Menu Button -->
+    <div class="lg:hidden fixed top-4 left-4 z-50">
+        <button id="menuBtn" class="bg-indigo-600 text-white p-2 rounded-lg">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+        </button>
+    </div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-64 bg-indigo-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 z-40">
+        <div class="p-6">
+            <h1 class="text-2xl font-bold">Admin Panel</h1>
+        </div>
+        <nav class="mt-6">
+            <a href="#" class="block px-6 py-3 hover:bg-indigo-800">Dashboard</a>
+            <a href="#" class="block px-6 py-3 hover:bg-indigo-800">Leads</a>
+            <a href="#" class="block px-6 py-3 hover:bg-indigo-800">Vendors</a>
+            <a href="#" class="block px-6 py-3 hover:bg-indigo-800">Payments</a>
+            <a href="#" class="block px-6 py-3 hover:bg-indigo-800">Reports</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="lg:ml-64 p-4 md:p-8">
+        <h2 class="text-2xl md:text-3xl font-bold mb-6">Dashboard Overview</h2>
+
+        <!-- Metrics Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="text-gray-500 text-sm">Today's Leads</div>
+                <div class="text-3xl font-bold text-indigo-600" id="todayLeads">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="text-gray-500 text-sm">Active Vendors</div>
+                <div class="text-3xl font-bold text-green-600" id="activeVendors">0</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="text-gray-500 text-sm">Total Revenue</div>
+                <div class="text-3xl font-bold text-purple-600" id="totalRevenue">₹0</div>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="text-gray-500 text-sm">Duplicates</div>
+                <div class="text-3xl font-bold text-red-600" id="duplicates">0</div>
+            </div>
+        </div>
+
+        <!-- Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-4">Leads by City</h3>
+                <canvas id="cityChart"></canvas>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-lg font-bold mb-4">Leads by Service</h3>
+                <canvas id="serviceChart"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Mobile menu toggle
+        document.getElementById('menuBtn').addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        });
+
+        // Fetch and display data
+        async function loadDashboard() {
+            const response = await fetch('/api/admin/dashboard', {
+                headers: {'Authorization': `Bearer ${localStorage.getItem('token')}`}
+            });
+            const data = await response.json();
+
+            document.getElementById('todayLeads').textContent = data.today_leads;
+            document.getElementById('activeVendors').textContent = data.active_vendors;
+            document.getElementById('totalRevenue').textContent = `₹${data.revenue}`;
+            document.getElementById('duplicates').textContent = data.duplicates;
+
+            // Charts
+            new Chart(document.getElementById('cityChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.cities,
+                    datasets: [{
+                        label: 'Leads',
+                        data: data.city_counts,
+                        backgroundColor: 'rgba(79, 70, 229, 0.8)'
+                    }]
+                }
+            });
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>
