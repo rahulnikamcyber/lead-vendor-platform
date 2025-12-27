@@ -1,0 +1,478 @@
+<!-- ============================================ -->
+<!-- ADMIN DASHBOARD -->
+<!-- ============================================ -->
+<!-- Save as: frontend/templates/admin/dashboard.html -->
+
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block navigation %}
+<nav class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <button onclick="logout()" class="text-red-600 hover:text-red-700">Logout</button>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Leads</p>
+                    <p id="totalLeads" class="text-3xl font-bold text-gray-900">0</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-2">Today: <span id="todayLeads" class="font-semibold">0</span></p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Active Vendors</p>
+                    <p id="activeVendors" class="text-3xl font-bold text-green-600">0</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-2">Total: <span id="totalVendors" class="font-semibold">0</span></p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Revenue</p>
+                    <p id="totalRevenue" class="text-3xl font-bold text-purple-600">₹0</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mt-2">This month: <span id="monthRevenue" class="font-semibold">₹0</span></p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Duplicates</p>
+                    <p id="duplicateLeads" class="text-3xl font-bold text-orange-600">0</p>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-full">
+                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+    
+    <!-- Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Leads by City</h3>
+            <canvas id="cityChart"></canvas>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold mb-4">Leads by Service Type</h3>
+            <canvas id="serviceChart"></canvas>
+        </div>
+        
+    </div>
+    
+    <!-- Recent Vendors -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Vendors</h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vendor ID</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">City</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Service</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Credits</th>
+                    </tr>
+                </thead>
+                <tbody id="vendorsTable" class="divide-y divide-gray-200"></tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>
+
+<script>
+let cityChart, serviceChart;
+
+async function loadDashboard() {
+    const token = getAuthToken();
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    try {
+        const response = await apiCall('/api/admin/dashboard');
+        const data = await response.json();
+        
+        // Update stats
+        document.getElementById('totalLeads').textContent = data.leads.total;
+        document.getElementById('todayLeads').textContent = data.leads.today;
+        document.getElementById('activeVendors').textContent = data.vendors.active;
+        document.getElementById('totalVendors').textContent = data.vendors.total;
+        document.getElementById('totalRevenue').textContent = '₹' + data.revenue.total.toFixed(2);
+        document.getElementById('monthRevenue').textContent = '₹' + data.revenue.month.toFixed(2);
+        document.getElementById('duplicateLeads').textContent = data.leads.duplicates;
+        
+        // City Chart
+        const cityCtx = document.getElementById('cityChart').getContext('2d');
+        if (cityChart) cityChart.destroy();
+        cityChart = new Chart(cityCtx, {
+            type: 'bar',
+            data: {
+                labels: data.leads_by_city.map(d => d.city),
+                datasets: [{
+                    label: 'Leads',
+                    data: data.leads_by_city.map(d => d.count),
+                    backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                    borderColor: 'rgb(59, 130, 246)',
+                    borderWidth: 1
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+        
+        // Service Chart
+        const serviceCtx = document.getElementById('serviceChart').getContext('2d');
+        if (serviceChart) serviceChart.destroy();
+        serviceChart = new Chart(serviceCtx, {
+            type: 'doughnut',
+            data: {
+                labels: data.leads_by_service.map(d => d.service),
+                datasets: [{
+                    data: data.leads_by_service.map(d => d.count),
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.5)',
+                        'rgba(16, 185, 129, 0.5)',
+                        'rgba(245, 158, 11, 0.5)',
+                        'rgba(239, 68, 68, 0.5)',
+                        'rgba(139, 92, 246, 0.5)'
+                    ]
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: true }
+        });
+        
+        // Load vendors
+        loadVendors();
+        
+    } catch (error) {
+        showToast('Error loading dashboard', 'error');
+    }
+}
+
+async function loadVendors() {
+    try {
+        const response = await apiCall('/api/admin/vendors?limit=10');
+        const data = await response.json();
+        
+        const tbody = document.getElementById('vendorsTable');
+        tbody.innerHTML = data.vendors.map(v => `
+            <tr>
+                <td class="px-4 py-3 text-sm">${v.vendor_id}</td>
+                <td class="px-4 py-3 text-sm">${v.company_name}</td>
+                <td class="px-4 py-3 text-sm">${v.city}</td>
+                <td class="px-4 py-3 text-sm">${v.service_type}</td>
+                <td class="px-4 py-3 text-sm">
+                    <span class="px-2 py-1 rounded text-xs ${v.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                        ${v.status.toUpperCase()}
+                    </span>
+                </td>
+                <td class="px-4 py-3 text-sm font-medium">${v.credits}</td>
+            </tr>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading vendors:', error);
+    }
+}
+
+function logout() {
+    clearAuthToken();
+    window.location.href = '/login';
+}
+
+loadDashboard();
+</script>
+{% endblock %}
+
+
+<!-- ============================================ -->
+<!-- VENDOR DASHBOARD -->
+<!-- ============================================ -->
+<!-- Save as: frontend/templates/vendor/dashboard.html -->
+
+{% extends "base.html" %}
+{% block title %}Vendor Dashboard{% endblock %}
+
+{% block navigation %}
+<nav class="bg-white shadow-sm">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-gray-900">Vendor Dashboard</h1>
+        <button onclick="logout()" class="text-red-600 hover:text-red-700">Logout</button>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    
+    <!-- Vendor Info Card -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg shadow-lg p-6 text-white mb-8">
+        <div class="grid md:grid-cols-4 gap-4">
+            <div>
+                <p class="text-blue-100 text-sm">Vendor ID</p>
+                <p id="vendorId" class="text-xl font-bold">-</p>
+            </div>
+            <div>
+                <p class="text-blue-100 text-sm">Company</p>
+                <p id="companyName" class="text-xl font-bold">-</p>
+            </div>
+            <div>
+                <p class="text-blue-100 text-sm">Available Credits</p>
+                <p id="credits" class="text-3xl font-bold">0</p>
+            </div>
+            <div>
+                <button onclick="showBuyCredits()" 
+                        class="bg-white text-blue-600 px-6 py-2 rounded-lg font-medium hover:bg-blue-50 w-full">
+                    Buy Credits
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-gray-500 text-sm mb-2">Total Leads Received</p>
+            <p id="totalLeadsReceived" class="text-3xl font-bold text-gray-900">0</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-gray-500 text-sm mb-2">Leads Today</p>
+            <p id="leadsToday" class="text-3xl font-bold text-blue-600">0</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-gray-500 text-sm mb-2">Status</p>
+            <p id="vendorStatus" class="text-2xl font-bold text-green-600">ACTIVE</p>
+        </div>
+        
+    </div>
+    
+    <!-- My Leads -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-semibold">My Leads</h3>
+        </div>
+        <div class="p-6">
+            <div id="leadsContainer" class="space-y-4"></div>
+            <div id="noLeads" class="text-center py-12 hidden">
+                <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <p class="text-gray-500">No leads yet. Purchase credits to start receiving leads.</p>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<!-- Buy Credits Modal -->
+<div id="buyCreditsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
+        <h3 class="text-2xl font-bold mb-4">Purchase Credits</h3>
+        <p class="text-gray-600 mb-6">1 Credit = 1 Lead = ₹100</p>
+        
+        <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Number of Credits</label>
+            <input type="number" id="creditsInput" value="10" min="1" max="1000"
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            <p class="text-sm text-gray-500 mt-2">Amount: ₹<span id="totalAmount">1000</span></p>
+        </div>
+        
+        <div class="flex gap-4">
+            <button onclick="closeBuyCredits()" 
+                    class="flex-1 bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300">
+                Cancel
+            </button>
+            <button onclick="purchaseCredits()" 
+                    class="flex-1 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+                Proceed to Payment
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let vendorData = null;
+
+async function loadVendorDashboard() {
+    const token = getAuthToken();
+    if (!token) {
+        window.location.href = '/login';
+        return;
+    }
+    
+    try {
+        // Load vendor profile
+        const profileResponse = await apiCall('/api/vendors/me');
+        vendorData = await profileResponse.json();
+        
+        document.getElementById('vendorId').textContent = vendorData.vendor_id;
+        document.getElementById('companyName').textContent = vendorData.company_name;
+        document.getElementById('credits').textContent = vendorData.credits;
+        document.getElementById('totalLeadsReceived').textContent = vendorData.total_leads_received;
+        document.getElementById('vendorStatus').textContent = vendorData.status.toUpperCase();
+        document.getElementById('vendorStatus').className = vendorData.status === 'active' 
+            ? 'text-2xl font-bold text-green-600' 
+            : 'text-2xl font-bold text-gray-600';
+        
+        // Load leads
+        loadLeads();
+        
+    } catch (error) {
+        showToast('Error loading dashboard', 'error');
+    }
+}
+
+async function loadLeads() {
+    try {
+        const response = await apiCall('/api/vendors/my-leads?limit=50');
+        const data = await response.json();
+        
+        const container = document.getElementById('leadsContainer');
+        const noLeads = document.getElementById('noLeads');
+        
+        if (data.leads.length === 0) {
+            container.innerHTML = '';
+            noLeads.classList.remove('hidden');
+            return;
+        }
+        
+        noLeads.classList.add('hidden');
+        
+        // Count today's leads
+        const today = new Date().toDateString();
+        const todayCount = data.leads.filter(l => 
+            new Date(l.assigned_at).toDateString() === today
+        ).length;
+        document.getElementById('leadsToday').textContent = todayCount;
+        
+        container.innerHTML = data.leads.map(lead => `
+            <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+                <div class="flex justify-between items-start mb-3">
+                    <div>
+                        <h4 class="text-lg font-semibold text-gray-900">${lead.vendor_lead_id}</h4>
+                        <p class="text-sm text-gray-500">${new Date(lead.assigned_at).toLocaleString()}</p>
+                    </div>
+                    <span class="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                        ${lead.service_type}
+                    </span>
+                </div>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <p class="text-gray-500">Customer Name</p>
+                        <p class="font-medium">${lead.customer_name}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Mobile</p>
+                        <p class="font-medium">${lead.mobile}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">City</p>
+                        <p class="font-medium">${lead.city}</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-500">Budget</p>
+                        <p class="font-medium">${lead.budget_range || 'Not specified'}</p>
+                    </div>
+                </div>
+                ${lead.notes ? `<p class="text-sm text-gray-600 mt-3"><strong>Notes:</strong> ${lead.notes}</p>` : ''}
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading leads:', error);
+    }
+}
+
+function showBuyCredits() {
+    document.getElementById('buyCreditsModal').classList.remove('hidden');
+}
+
+function closeBuyCredits() {
+    document.getElementById('buyCreditsModal').classList.add('hidden');
+}
+
+document.getElementById('creditsInput').addEventListener('input', (e) => {
+    const credits = parseInt(e.target.value) || 0;
+    document.getElementById('totalAmount').textContent = (credits * 100).toFixed(0);
+});
+
+async function purchaseCredits() {
+    const credits = parseInt(document.getElementById('creditsInput').value);
+    
+    if (credits < 1) {
+        showToast('Please enter a valid number of credits', 'error');
+        return;
+    }
+    
+    try {
+        const response = await apiCall('/api/vendors/buy-credits', {
+            method: 'POST',
+            body: JSON.stringify({ credits })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+            window.open(data.payment_link, '_blank');
+            closeBuyCredits();
+            showToast('Payment link opened. Complete payment to add credits.', 'info');
+        } else {
+            showToast(data.detail || 'Failed to create payment', 'error');
+        }
+    } catch (error) {
+        showToast('Error creating payment', 'error');
+    }
+}
+
+function logout() {
+    clearAuthToken();
+    window.location.href = '/login';
+}
+
+loadVendorDashboard();
+setInterval(loadVendorDashboard, 30000); // Refresh every 30 seconds
+</script>
+{% endblock %}
