@@ -1,0 +1,135 @@
+services:
+  - type: web
+    name: lead-vendor-platform
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lead-vendor-db
+          property: connectionString
+      - key: WHATSAPP_API_URL
+        sync: false
+      - key: WHATSAPP_API_TOKEN
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASSWORD
+        sync: false
+
+databases:
+  - name: lead-vendor-db
+    databaseName: leadvendor
+    user: leadvendor
+```
+
+4. Scroll down and click **"Commit new file"**
+
+---
+
+## Step 3: Check Your Branch Name
+
+The error mentions "master branch". Let's check if your repository uses `main` or `master`:
+
+1. Look at the top-left of your GitHub repository page
+2. You'll see a dropdown that says either **"main"** or **"master"**
+
+### If it says "main":
+Go back to Render and change the branch:
+- In the Render Blueprint page
+- Find the **Branch** dropdown
+- Change from `master` to `main`
+- Click **"Retry"**
+
+---
+
+## Step 4: Verify All Required Files
+
+Make sure these files exist in your repository:
+```
+✅ main.py
+✅ requirements.txt
+✅ render.yaml  ← THIS ONE WAS MISSING
+✅ .env.example
+✅ .gitignore
+✅ templates/base.html
+✅ templates/index.html
+✅ templates/lead_form.html
+✅ templates/vendor_register.html
+✅ templates/login.html
+✅ templates/lead_success.html
+✅ templates/vendor_success.html
+✅ templates/admin_dashboard.html
+✅ templates/vendor_dashboard.html
+```
+
+---
+
+## Step 5: Retry Deployment
+
+After adding `render.yaml`:
+
+1. Go back to Render Blueprint page
+2. Click the **"Retry"** button
+3. Render will re-scan your repository
+4. It should now find the `render.yaml` file
+5. You'll see:
+   - ✅ Web Service: lead-vendor-platform
+   - ✅ PostgreSQL Database: lead-vendor-db
+6. Click **"Apply"**
+
+---
+
+## Alternative: Manual Deployment (If Blueprint Still Fails)
+
+If Blueprint still doesn't work, deploy manually:
+
+### Option A: Deploy Web Service Only
+
+1. In Render Dashboard, click **"New +"** → **"Web Service"**
+2. Connect your GitHub repository
+3. Fill in:
+   - **Name:** `lead-vendor-platform`
+   - **Branch:** `main` (or `master`)
+   - **Runtime:** `Python 3`
+   - **Build Command:** `pip install -r requirements.txt`
+   - **Start Command:** `gunicorn main:app --workers 4 --worker-class uvicorn.workers.UvicornWorker --bind 0.0.0.0:$PORT`
+4. Click **"Create Web Service"**
+
+### Option B: Add Database Separately
+
+1. After web service is created, click **"New +"** → **"PostgreSQL"**
+2. Name it: `lead-vendor-db`
+3. Click **"Create Database"**
+4. Once created, copy the **Internal Database URL**
+5. Go to your web service → **Environment** tab
+6. Add environment variable:
+   - Key: `DATABASE_URL`
+   - Value: [paste the database URL]
+7. Click **"Save Changes"**
+
+---
+
+## Quick Check
+
+After adding `render.yaml`, refresh your GitHub repository page and verify the file exists at:
+```
+https://github.com/rahulnikamcyber/RayNexuss-lead-vendor-platform/blob/main/render.yaml
+```
+
+or
+```
+https://github.com/rahulnikamcyber/RayNexuss-lead-vendor-platform/blob/master/render.yaml
